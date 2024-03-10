@@ -1,0 +1,70 @@
+from ultralytics import YOLO
+import cv2
+from flask import Flask, jsonify
+from flask_restful import Resource, Api
+import threading
+import time
+
+app = Flask(__name__)
+api = Api(app)
+
+class Model(Resource):
+    def __init__(self):
+        super().__init__()
+        self.model = YOLO("best.pt")
+        self.class_names = self.model.names
+        self.capture_interval = 2  # Set the capture interval in seconds
+        self.capture_count = 0
+
+    def capture_and_save(self):
+        cap = cv2.VideoCapture(0)
+
+        while True:
+            ret, img = cap.read()
+            if not ret:
+                break
+
+            img = cv2.resize(img, (1020, 500))
+            h, w, _ = img.shape
+            results = self.model.predict(img)
+
+            for r in results:
+                boxes = r.boxes
+                masks = r.masks
+
+            if masks is not None:
+                masks = masks.data.cpu()
+                for seg, box in zip(masks.data.cpu().numpy(), boxes):
+                    seg = cv2.resize(seg, (w, h))
+                    contours, _ = cv2.findContours((seg).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                    for contour in contours:
+                        d = int(box.cls)
+                        c = self.class_names[d]
+                        x, y, x1, y1 = cv2.boundingRect(contour)
+                        cv2.polylines(img, [contour], True, color=(0, 0, 255), thickness=2)
+                        cv2.putText(img, c, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+            # Save the image with a sequential filename
+            self.capture_count += 1
+            filename = f"dummy/image{self.capture_count}.jpg"
+            cv2.imwrite(filename, img)
+
+            time.sleep(self.capture_interval)
+
+        cap.release()
+
+    def post(self):
+        try:
+            # Start capturing images in a separate thread
+            capture_thread = threading.Thread(target=self.capture_and_save)
+            capture_thread.start()
+
+            return jsonify({'status': 'Capturing images in the background.'})
+        except Exception as e:
+            return jsonify({'error': str(e)})
+
+api.add_resource(Model, '/capture')
+
+if __name__ == '__main__':
+    app.run(debug=True)
