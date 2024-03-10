@@ -11,7 +11,7 @@ https://drive.google.com/drive/folders/1Q3ekbx8xGwdfOR9NmiOjBPCHu_CXTITq?usp=sha
 2. [Modules Used](#modules-used)
 3. [Methodology](#methodology)
 4. [User Instruction](#userinstruct)
-5. [Ideas](#future-ideas)
+5. [Future Ideas](#future-ideas)
 6. [Conclusion](#conclusion)
 
 ## Introduction:
