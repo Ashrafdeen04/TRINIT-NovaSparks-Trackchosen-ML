@@ -1,6 +1,6 @@
 # README
 
-## TRINIT-NovaSparks-Trackchosen-ML-
+## TRINIT-NovaSparks-Trackchosen-ML
 
 ### Video Link:
 
